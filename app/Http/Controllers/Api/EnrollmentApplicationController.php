@@ -182,10 +182,17 @@ class EnrollmentApplicationController extends Controller
 
         $user = $request->user();
 
-        $profileId = Profile::where('user_id', $user->id)->value('id');
-        if (!$profileId) {
-            return response()->json(['message' => 'El usuario no tiene profile asociado.'], 422);
+        // use relation and create profile if missing
+        $profile = $user->profile;
+        if (! $profile) {
+            $profile = Profile::create([
+                'user_id' => $user->id,
+                'role' => 'admin',
+                'full_name' => $user->name ?? 'Sin nombre',
+                'status' => 'active',
+            ]);
         }
+        $profileId = $profile->id;
 
         $result = DB::selectOne(
             "SELECT * FROM public.approve_enrollment_application(?, ?, ?)",
@@ -227,10 +234,17 @@ class EnrollmentApplicationController extends Controller
 
         $user = $request->user();
 
-        $profileId = Profile::where('user_id', $user->id)->value('id');
-        if (!$profileId) {
-            return response()->json(['message' => 'El usuario no tiene profile asociado.'], 422);
+        // prefer relationship; ensure a profile exists
+        $profile = $user->profile;
+        if (! $profile) {
+            $profile = Profile.create([
+                'user_id' => $user->id,
+                'role' => 'admin',
+                'full_name' => $user->name ?? 'Sin nombre',
+                'status' => 'active',
+            ]);
         }
+        $profileId = $profile->id;
 
         $app->update([
             'status' => 'rejected',
