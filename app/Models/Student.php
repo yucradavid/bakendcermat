@@ -47,4 +47,19 @@ class Student extends Model
             ->withPivot(['id', 'is_primary', 'created_at'])
             ->withTimestamps(); // ojo: pivot solo tiene created_at, pero no afecta si no actualizas
     }
+
+    public function studentDiscounts()
+{
+    return $this->hasMany(StudentDiscount::class, 'student_id');
+}
+
+public function messages()
+{
+    return $this->hasMany(Message::class, 'student_id');
+}
+
+public function assignmentSubmissions()
+{
+    return $this->hasMany(AssignmentSubmission::class, 'student_id');
+}
 }

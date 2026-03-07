@@ -36,4 +36,5 @@ protected $fillable = [
     {
         return $this->belongsTo(Section::class, 'section_id');
     }
+
 }

@@ -22,4 +22,13 @@ class FeeConcept extends Model
     {
         return $this->hasMany(Charge::class, 'concept_id');
     }
+    public function discounts()
+{
+    return $this->hasMany(Discount::class, 'specific_concept_id');
+}
+
+public function financialPlans()
+{
+    return $this->hasMany(FinancialPlan::class, 'concept_id');
+}
 }

@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\LoginRequest;
 use App\Models\Profile;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as RoutingController;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends RoutingController
 {
@@ -14,33 +15,32 @@ class AuthController extends RoutingController
     {
         $credentials = $request->validated();
 
-        if (!Auth::attempt($credentials)) {
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
                 'message' => 'Credenciales incorrectas.'
             ], 401);
         }
 
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $profile = Profile::where('user_id', (string) $user->id)->first();
 
-        // ✅ Crear perfil si no existe
-        $profile = $user->profile()->firstOrCreate(
-            ['user_id' => $user->id],
-            [
-                'role' => 'admin', // ajusta según tu necesidad
-                'full_name' => $user->name ?? 'Sin nombre',
-                'email' => $user->email,
-                'is_active' => true,
-                // created_by opcional si lo manejas (si no, quítalo)
-            ]
-        );
+if (!$profile) {
+$profile = Profile::create([
+    'id' => (string) $user->id,
+    'user_id' => (string) $user->id,
+    'role' => 'admin',
+    'full_name' => $user->name ?? 'Sin nombre',
+    'email' => $user->email,
+    'is_active' => true,
+]);
+}
 
-        // ✅ Token Sanctum
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
             'token' => $token,
-            'user' => $user->load('profile'), // ✅ para que venga el perfil en la respuesta
+            'user' => $user->fresh()->load('profile'),
         ]);
     }
 
